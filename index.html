@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JE-1024 Vehicle Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; background: #eef2f5; color: #333; }
+        .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        h2 { color: #1a365d; font-size: 18px; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        .qr-container { text-align: center; }
+        .qr-img { width: 100%; max-width: 260px; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0; }
+        .btn { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-green { background: #16a34a; }
+        .btn-green:hover { background: #15803d; }
+        label { font-weight: 600; font-size: 14px; display: block; margin-top: 10px; color: #475569; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        input[readonly] { background-color: #f1f5f9; font-weight: bold; color: #1e293b; }
+        .spec-box { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px; font-size: 13px; line-height: 1.6; }
+        .price-box { background: #fef3c7; border: 1px solid #fde047; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Vehicle & QR Pass Section -->
+    <div class="card qr-container">
+        <h2>Mazda Familia BJ5P (JE-1024)</h2>
+        <p style="margin: 5px 0;"><b>Fuel Pass Code:</b> JYBRCEF75EF2</p>
+        <!-- Fuel Pass QR Image -->
+        <img class="qr-img" src="https://lh3.googleusercontent.com/d/17zgIOB2azc5_eXBhx1ulfJc9pOkLApPH" alt="Fuel Pass QR Code">
+    </div>
+
+    <!-- Fuel Price Configuration -->
+    <div class="card price-box">
+        <label style="margin-top:0;">වත්මන් පෙට්‍රල් ලීටරයක මිල (1L Price in LKR):</label>
+        <input type="number" id="fuelPrice" value="414" oninput="calculateLitres()">
+    </div>
+
+    <!-- Fuel Tracker Form -->
+    <div class="card">
+        <h2>ඉන්ධන පිරවීම (Fuel Entry)</h2>
+        
+        <label>ගැසූ මුදල / Amount (LKR):</label>
+        <input type="number" id="fuelCost" placeholder="ලබාදුන් මුදල ඇතුළත් කරන්න" oninput="calculateLitres()">
+
+        <label>ලැබෙන ලීටර ගණන (Calculated Litres):</label>
+        <input type="text" id="fuelLitres" readonly placeholder="0.00 L">
+
+        <label>තෙල් ගහද්දි Mileage (Odometer KM):</label>
+        <input type="number" id="fuelKM" placeholder="උදා: 150000">
+
+        <button class="btn" onclick="addFuel()">Fuel Log එක Save කරන්න</button>
+    </div>
+
+    <!-- Service Records & Reminders -->
+    <div class="card">
+        <h2>Service Log & Reminders</h2>
+        
+        <label>දැනට ධාවනය කර ඇති කිලෝමීටර (Current Mileage):</label>
+        <input type="number" id="currentKM" placeholder="උදා: 150000">
+
+        <label>නඩත්තු වර්ගය (Service Type):</label>
+        <select id="serviceType">
+            <option value="Engine Oil">Engine Oil Change (එන්ජින් ඔයිල්)</option>
+            <option value="Gear Oil">Gear Oil Change / ATF (ගියර් ඔයිල්)</option>
+            <option value="Full Service">Full Service (සම්පූර්ණ නඩත්තුව)</option>
+        </select>
+
+        <button class="btn btn-green" onclick="addService()">Service Record එක Save කරන්න</button>
+    </div>
+
+    <!-- Maintenance Specs Reference -->
+    <div class="card spec-box">
+        <h3 style="margin-top:0; color:#166534;">Mazda BJ5P Maintenance Specs</h3>
+        <b>Engine Oil Capacity:</b> 2.9L - 3.2L (10W-30 / 10W-40)<br>
+        <b>Engine Oil Interval:</b> කිලෝමීටර 5,000 න් 5,000 ට<br>
+        <b>Gear Oil Spec (ATF):</b> ATF M-III / Dexron III<br>
+        <b>Gear Oil Interval:</b> කිලෝමීටර 30,000 - 40,000 න් වරක්
+    </div>
+
+    <script>
+        // ස්වයංක්‍රීයව ලීටර ගණනය කරන Function එක
+        function calculateLitres() {
+            let price = parseFloat(document.getElementById('fuelPrice').value);
+            let cost = parseFloat(document.getElementById('fuelCost').value);
+
+            if (price > 0 && cost > 0) {
+                let litres = cost / price;
+                document.getElementById('fuelLitres').value = litres.toFixed(2) + " L";
+            } else {
+                document.getElementById('fuelLitres').value = "";
+            }
+        }
+
+        // Fuel Data Save කිරීම
+        function addFuel() {
+            let cost = document.getElementById('fuelCost').value;
+            let litres = document.getElementById('fuelLitres').value;
+            let km = document.getElementById('fuelKM').value;
+
+            if (cost && litres) {
+                alert(`ඉන්ධන සටහන එකතු විය!\nමුදල: LKR ${cost}\nලීටර: ${litres}\nMileage: ${km || 'N/A'} KM`);
+                document.getElementById('fuelCost').value = '';
+                document.getElementById('fuelLitres').value = '';
+                document.getElementById('fuelKM').value = '';
+            } else {
+                alert('කරුණාකර ගැසූ මුදල ඇතුළත් කරන්න.');
+            }
+        }
+
+        // Service & Reminder Logic
+        function addService() {
+            let km = parseInt(document.getElementById('currentKM').value);
+            let type = document.getElementById('serviceType').value;
+
+            if (km) {
+                let nextEngineOil = km + 5000;
+                let nextGearOil = km + 30000;
+
+                alert(`${type} වාර්තාව යාවත්කාලීන විය!\n\nඊළඟ Engine Oil Service එක: ${nextEngineOil} KM දී\nඊළඟ Gear Oil Service එක: ${nextGearOil} KM දී`);
+            } else {
+                alert('කරුණාකර වත්මන් Mileage (KM) ප්‍රමාණය ඇතුළත් කරන්න.');
+            }
+        }
+    </script>
+
+</body>
+</html>
