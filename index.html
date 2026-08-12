@@ -4,60 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JE-1024 Vehicle Manager</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; background: #eef2f5; color: #333; }
-        .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        h2 { color: #1a365d; font-size: 18px; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; background: #f2f4f7; color: #1f2937; }
+        .card { background: #ffffff; padding: 18px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
+        h2 { color: #1e3a8a; font-size: 18px; margin-top: 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
         .qr-container { text-align: center; }
-        .qr-img { width: 100%; max-width: 260px; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0; }
-        .btn { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn:hover { background: #1d4ed8; }
+        .qr-img { width: 100%; max-width: 260px; height: auto; border-radius: 12px; border: 1px solid #e5e7eb; margin: 12px 0; background-color: #fff; }
+        .btn { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn:active { background: #1d4ed8; }
         .btn-green { background: #16a34a; }
-        .btn-green:hover { background: #15803d; }
-        label { font-weight: 600; font-size: 14px; display: block; margin-top: 10px; color: #475569; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        input[readonly] { background-color: #f1f5f9; font-weight: bold; color: #1e293b; }
+        .btn-green:active { background: #15803d; }
+        label { font-weight: 600; font-size: 14px; display: block; margin-top: 10px; color: #4b5563; }
+        input, select { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #f9fafb; }
+        input[readonly] { background-color: #f3f4f6; font-weight: bold; color: #111827; }
+        .price-box { background: #fef9c3; border: 1px solid #fde047; padding: 12px; border-radius: 12px; margin-bottom: 16px; }
         .spec-box { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px; font-size: 13px; line-height: 1.6; }
-        .price-box { background: #fef3c7; border: 1px solid #fde047; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- Vehicle & QR Pass Section -->
+    <!-- Vehicle & Embedded Base64 QR -->
     <div class="card qr-container">
         <h2>Mazda Familia BJ5P (JE-1024)</h2>
-        <p style="margin: 5px 0;"><b>Fuel Pass Code:</b> JYBRCEF75EF2</p>
-        <!-- Fuel Pass QR Image -->
-        <img class="qr-img" src="https://lh3.googleusercontent.com/d/17zgIOB2azc5_eXBhx1ulfJc9pOkLApPH" alt="Fuel Pass QR Code">
+        <p style="margin: 4px 0; font-weight: bold; color: #4b5563;">Fuel Pass Code: JYBRCEF75EF2</p>
+        
+        <!-- QR Code embedded directly API via QRserver for dynamic rendering fallback -->
+        <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=JYBRCEF75EF2" alt="Fuel Pass QR Code">
     </div>
 
-    <!-- Fuel Price Configuration -->
+    <!-- Fuel Price Setting -->
     <div class="card price-box">
-        <label style="margin-top:0;">වත්මන් පෙට්‍රල් ලීටරයක මිල (1L Price in LKR):</label>
+        <label style="margin-top:0;">වත්මන් පෙට්‍රල් ලීටරයක මිල (1L Price LKR):</label>
         <input type="number" id="fuelPrice" value="414" oninput="calculateLitres()">
     </div>
 
-    <!-- Fuel Tracker Form -->
+    <!-- Fuel Entry -->
     <div class="card">
         <h2>ඉන්ධන පිරවීම (Fuel Entry)</h2>
         
         <label>ගැසූ මුදල / Amount (LKR):</label>
-        <input type="number" id="fuelCost" placeholder="ලබාදුන් මුදල ඇතුළත් කරන්න" oninput="calculateLitres()">
+        <input type="number" id="fuelCost" placeholder="උදා: 2000" oninput="calculateLitres()">
 
         <label>ලැබෙන ලීටර ගණන (Calculated Litres):</label>
         <input type="text" id="fuelLitres" readonly placeholder="0.00 L">
 
-        <label>තෙල් ගහද්දි Mileage (Odometer KM):</label>
+        <label>Odometer Mileage (KM):</label>
         <input type="number" id="fuelKM" placeholder="උදා: 150000">
 
         <button class="btn" onclick="addFuel()">Fuel Log එක Save කරන්න</button>
     </div>
 
-    <!-- Service Records & Reminders -->
+    <!-- Service Records -->
     <div class="card">
         <h2>Service Log & Reminders</h2>
         
-        <label>දැනට ධාවනය කර ඇති කිලෝමීටර (Current Mileage):</label>
+        <label>වත්මන් Mileage (Current KM):</label>
         <input type="number" id="currentKM" placeholder="උදා: 150000">
 
         <label>නඩත්තු වර්ගය (Service Type):</label>
@@ -80,7 +83,6 @@
     </div>
 
     <script>
-        // ස්වයංක්‍රීයව ලීටර ගණනය කරන Function එක
         function calculateLitres() {
             let price = parseFloat(document.getElementById('fuelPrice').value);
             let cost = parseFloat(document.getElementById('fuelCost').value);
@@ -93,7 +95,6 @@
             }
         }
 
-        // Fuel Data Save කිරීම
         function addFuel() {
             let cost = document.getElementById('fuelCost').value;
             let litres = document.getElementById('fuelLitres').value;
@@ -109,7 +110,6 @@
             }
         }
 
-        // Service & Reminder Logic
         function addService() {
             let km = parseInt(document.getElementById('currentKM').value);
             let type = document.getElementById('serviceType').value;
