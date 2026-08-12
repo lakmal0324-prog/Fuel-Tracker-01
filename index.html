@@ -4,34 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JE-1024 Vehicle Manager</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; background: #f2f4f7; color: #1f2937; }
         .card { background: #ffffff; padding: 18px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
         h2 { color: #1e3a8a; font-size: 18px; margin-top: 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
         .qr-container { text-align: center; }
         .qr-img { width: 100%; max-width: 260px; height: auto; border-radius: 12px; border: 1px solid #e5e7eb; margin: 12px 0; background-color: #fff; }
-        .btn { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn:active { background: #1d4ed8; }
         .btn-green { background: #16a34a; }
-        .btn-green:active { background: #15803d; }
+        .btn-red { background: #dc2626; padding: 6px 10px; font-size: 12px; border-radius: 6px; }
         label { font-weight: 600; font-size: 14px; display: block; margin-top: 10px; color: #4b5563; }
-        input, select { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #f9fafb; }
+        input, select { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-size: 15px; background: #f9fafb; }
         input[readonly] { background-color: #f3f4f6; font-weight: bold; color: #111827; }
         .price-box { background: #fef9c3; border: 1px solid #fde047; padding: 12px; border-radius: 12px; margin-bottom: 16px; }
-        .spec-box { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px; font-size: 13px; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+        th { background-color: #f3f4f6; color: #374151; }
+        .summary-box { background: #e0f2fe; border-left: 4px solid #0284c7; padding: 10px; margin-bottom: 10px; font-size: 14px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- Vehicle & Embedded Base64 QR -->
+    <!-- Vehicle & Image Upload QR Section -->
     <div class="card qr-container">
         <h2>Mazda Familia BJ5P (JE-1024)</h2>
         <p style="margin: 4px 0; font-weight: bold; color: #4b5563;">Fuel Pass Code: JYBRCEF75EF2</p>
         
-        <!-- QR Code embedded directly API via QRserver for dynamic rendering fallback -->
-        <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=JYBRCEF75EF2" alt="Fuel Pass QR Code">
+        <!-- QR Display -->
+        <img id="qrDisplay" class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=JYBRCEF75EF2" alt="Fuel Pass QR">
+        
+        <label style="font-size: 12px; color: #6b7280;">ඔබේ QR ඡායාරූපය Phone එකෙන් තෝරන්න (Custom Upload):</label>
+        <input type="file" id="qrInput" accept="image/*" onchange="uploadQR(event)">
     </div>
 
     <!-- Fuel Price Setting -->
@@ -40,20 +44,49 @@
         <input type="number" id="fuelPrice" value="414" oninput="calculateLitres()">
     </div>
 
-    <!-- Fuel Entry -->
+    <!-- Fuel Entry Form -->
     <div class="card">
         <h2>ඉන්ධන පිරවීම (Fuel Entry)</h2>
         
+        <label>දිනය (Date):</label>
+        <input type="date" id="fuelDate">
+
         <label>ගැසූ මුදල / Amount (LKR):</label>
         <input type="number" id="fuelCost" placeholder="උදා: 2000" oninput="calculateLitres()">
 
-        <label>ලැබෙන ලීටර ගණන (Calculated Litres):</label>
+        <label>ලැබෙන ලීටර ගණන (Litres):</label>
         <input type="text" id="fuelLitres" readonly placeholder="0.00 L">
 
         <label>Odometer Mileage (KM):</label>
         <input type="number" id="fuelKM" placeholder="උදා: 150000">
 
         <button class="btn" onclick="addFuel()">Fuel Log එක Save කරන්න</button>
+    </div>
+
+    <!-- Fuel Logs / History Table -->
+    <div class="card">
+        <h2>Fuel Log History (ඉන්ධන වාර්තා)</h2>
+        
+        <div class="summary-box">
+            <b>මුළු වියදම:</b> Rs. <span id="totalCost">0</span> | <b>මුළු ලීටර:</b> <span id="totalLitres">0</span> L
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Litres</th>
+                        <th>KM</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fuelTableBody">
+                    <!-- Logs will be loaded here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Service Records -->
@@ -73,43 +106,105 @@
         <button class="btn btn-green" onclick="addService()">Service Record එක Save කරන්න</button>
     </div>
 
-    <!-- Maintenance Specs Reference -->
-    <div class="card spec-box">
-        <h3 style="margin-top:0; color:#166534;">Mazda BJ5P Maintenance Specs</h3>
-        <b>Engine Oil Capacity:</b> 2.9L - 3.2L (10W-30 / 10W-40)<br>
-        <b>Engine Oil Interval:</b> කිලෝමීටර 5,000 න් 5,000 ට<br>
-        <b>Gear Oil Spec (ATF):</b> ATF M-III / Dexron III<br>
-        <b>Gear Oil Interval:</b> කිලෝමීටර 30,000 - 40,000 න් වරක්
-    </div>
-
     <script>
+        // Set Today's Date by default
+        document.getElementById('fuelDate').valueAsDate = new Date();
+
+        // Load saved QR & Fuel Data on Startup
+        window.onload = function() {
+            let savedQR = localStorage.getItem('customQR');
+            if(savedQR) {
+                document.getElementById('qrDisplay').src = savedQR;
+            }
+            renderFuelLogs();
+        };
+
+        // Custom Image Upload Logic
+        function uploadQR(event) {
+            let reader = new FileReader();
+            reader.onload = function() {
+                let imgData = reader.result;
+                document.getElementById('qrDisplay').src = imgData;
+                localStorage.setItem('customQR', imgData);
+            };
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+
+        // Auto Calculate Litres
         function calculateLitres() {
             let price = parseFloat(document.getElementById('fuelPrice').value);
             let cost = parseFloat(document.getElementById('fuelCost').value);
 
             if (price > 0 && cost > 0) {
                 let litres = cost / price;
-                document.getElementById('fuelLitres').value = litres.toFixed(2) + " L";
+                document.getElementById('fuelLitres').value = litres.toFixed(2);
             } else {
                 document.getElementById('fuelLitres').value = "";
             }
         }
 
+        // Save Fuel Log to LocalStorage
         function addFuel() {
-            let cost = document.getElementById('fuelCost').value;
-            let litres = document.getElementById('fuelLitres').value;
-            let km = document.getElementById('fuelKM').value;
+            let date = document.getElementById('fuelDate').value;
+            let cost = parseFloat(document.getElementById('fuelCost').value);
+            let litres = parseFloat(document.getElementById('fuelLitres').value);
+            let km = document.getElementById('fuelKM').value || '-';
 
-            if (cost && litres) {
-                alert(`ඉන්ධන සටහන එකතු විය!\nමුදල: LKR ${cost}\nලීටර: ${litres}\nMileage: ${km || 'N/A'} KM`);
-                document.getElementById('fuelCost').value = '';
-                document.getElementById('fuelLitres').value = '';
-                document.getElementById('fuelKM').value = '';
-            } else {
+            if (!cost || !litres) {
                 alert('කරුණාකර ගැසූ මුදල ඇතුළත් කරන්න.');
+                return;
             }
+
+            let logs = JSON.parse(localStorage.getItem('fuelLogs')) || [];
+            logs.push({ id: Date.now(), date, cost, litres, km });
+            localStorage.setItem('fuelLogs', JSON.stringify(logs));
+
+            document.getElementById('fuelCost').value = '';
+            document.getElementById('fuelLitres').value = '';
+            document.getElementById('fuelKM').value = '';
+
+            renderFuelLogs();
+            alert('Fuel Log එක සාර්ථකව Save විය!');
         }
 
+        // Render Fuel Log Table & Summary
+        function renderFuelLogs() {
+            let logs = JSON.parse(localStorage.getItem('fuelLogs')) || [];
+            let tbody = document.getElementById('fuelTableBody');
+            tbody.innerHTML = '';
+
+            let totCost = 0;
+            let totLitres = 0;
+
+            logs.reverse().forEach(log => {
+                totCost += log.cost;
+                totLitres += log.litres;
+
+                let row = `<tr>
+                    <td>${log.date}</td>
+                    <td>Rs. ${log.cost}</td>
+                    <td>${log.litres} L</td>
+                    <td>${log.km}</td>
+                    <td><button class="btn-red" onclick="deleteLog(${log.id})">X</button></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById('totalCost').innerText = totCost.toLocaleString();
+            document.getElementById('totalLitres').innerText = totLitres.toFixed(2);
+        }
+
+        // Delete Fuel Log
+        function deleteLog(id) {
+            let logs = JSON.parse(localStorage.getItem('fuelLogs')) || [];
+            logs = logs.filter(log => log.id !== id);
+            localStorage.setItem('fuelLogs', JSON.stringify(logs));
+            renderFuelLogs();
+        }
+
+        // Service Reminder Logic
         function addService() {
             let km = parseInt(document.getElementById('currentKM').value);
             let type = document.getElementById('serviceType').value;
@@ -117,13 +212,11 @@
             if (km) {
                 let nextEngineOil = km + 5000;
                 let nextGearOil = km + 30000;
-
                 alert(`${type} වාර්තාව යාවත්කාලීන විය!\n\nඊළඟ Engine Oil Service එක: ${nextEngineOil} KM දී\nඊළඟ Gear Oil Service එක: ${nextGearOil} KM දී`);
             } else {
                 alert('කරුණාකර වත්මන් Mileage (KM) ප්‍රමාණය ඇතුළත් කරන්න.');
             }
         }
     </script>
-
 </body>
 </html>
